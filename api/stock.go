@@ -8,7 +8,8 @@ import (
 
 const baseURL = "https://www.alphavantage.co/query"
 
-func FetchStockPrice(symbol string, apiKey string) (map[string]interface{}, error) {
+// Fetches the stock data and returns the parsed closing price and timestamp
+func FetchStockPrice(symbol string, apiKey string) (string, float64, error) {
 	client := resty.New()
 
 	resp, err := client.R().
@@ -21,19 +22,44 @@ func FetchStockPrice(symbol string, apiKey string) (map[string]interface{}, erro
 		Get(baseURL)
 
 	if err != nil {
-		return nil, err
+		return "", 0, err
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("error: %s", resp.Status())
+		return "", 0, fmt.Errorf("error: %s", resp.Status())
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
-		return nil, err
+		return "", 0, err
+	}
+
+	// Extract timeseries data
+	timeSeries, ok := result["Time Series (1min)"].(map[string]interface{})
+	if !ok {
+		return "", 0, fmt.Errorf("failed to parse timeseries")
+	}
+
+	var latestTimestamp string
+	var latestPrice float64
+	for timestamp, data := range timeSeries {
+		latestTimestamp = timestamp
+		priceData := data.(map[string]interface{})
+		closePrice := priceData["4. close"].(string)
+
+		// convert to float
+		latestPrice = parsedPrice(closePrice)
+
+		break // only need the latest price
 	}
 	
-	return result, nil
+	return latestTimestamp, latestPrice, nil
+}
+
+func parsedPrice(parsedStr string) float64 {
+	var price float64
+	fmt.Sscanf(parsedStr, "%f", &price)
+	return price
 }
 
