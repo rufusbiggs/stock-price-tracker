@@ -6,6 +6,15 @@ import (
 	"log"
 )
 
+const createStockTable = `
+	CREATE TABLE IF NOT EXISTS stocks (
+		id SERIAL PRIMARY KEY,
+		symbol VARCHAR(10) NOT NULL,
+		price NUMERIC(10, 2) NOT NULL,
+		timestamp TIMESTAMP NOT NULL
+	);
+`
+
 var DB *sql.DB
 
 func InitDB(connStr string) {
@@ -13,6 +22,11 @@ func InitDB(connStr string) {
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	_, err = DB.Exec(createStockTable)
+	if err != nil {
+		log.Fatalf("Error creating stock table: %v", err)
 	}
 
 	if err = DB.Ping(); err != nil {

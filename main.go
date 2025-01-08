@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	connStr := "postgres://user:password@localhost/stock_tracker?sslmode=disable"
+	connStr := "postgres://rufusbiggs:Curry123!@localhost/stock_tracker?sslmode=disable"
 	db.InitDB(connStr)
 
 	apiKey := "WO363FDOPGSZ33EN"
