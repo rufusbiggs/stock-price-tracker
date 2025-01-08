@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 	"stock-price-tracker/api"
 	"stock-price-tracker/db"
 )
@@ -14,15 +15,25 @@ func main() {
 	apiKey := "WO363FDOPGSZ33EN"
 	symbol := "AAPL" // for testing fetch Apple stock prices
 
-	timestamp, price, err := api.FetchStockPrice(symbol, apiKey)
-	if err != nil {
-		log.Fatalf("Error fetching stock data: %v", err)
-	}
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	log.Println("Starting scheduled stock price fetching...")
 
-	err = db.SaveStockData(symbol, price, timestamp)
-	if err != nil {
-		log.Fatalf("Error saving stock data: %v", err)
+	for {
+		select {
+		case <-ticker.C:
+			timestamp, price, err := api.FetchStockPrice(symbol, apiKey)
+			if err != nil {
+				log.Fatalf("Error fetching stock data: %v", err)
+			}
+		
+			err = db.SaveStockData(symbol, price, timestamp)
+			if err != nil {
+				log.Fatalf("Error saving stock data: %v", err)
+			}
+		
+			fmt.Println("Stock Data saved successfully!")
+		}
 	}
-
-	fmt.Println("Stock Data saved successfully!")
+	
 }
