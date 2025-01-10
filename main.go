@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"context"
 	"stock-price-tracker/api"
 	"stock-price-tracker/db"
@@ -14,10 +15,15 @@ func main() {
 }
 
 func HandleRequest(ctx context.Context) {
-	connStr := "postgres://rufusbiggs:Curry123!@database-1.cz6u2ssscpux.eu-north-1.rds.amazonaws.com/stock_tracker?sslmode=disable"
+
+	dbUsername := os.Getenv("DB_USERNAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/stock_tracker?sslmode=require", dbUsername, dbPassword, dbHost)
 	db.InitDB(connStr)
 
-	apiKey := "WO363FDOPGSZ33EN"
+	apiKey := os.Getenv("API_KEY")
 	symbol := "AAPL" // for testing fetch Apple stock prices
 
 	timestamp, price, err := api.FetchStockPrice(symbol, apiKey)
