@@ -14,7 +14,7 @@ func main() {
 }
 
 func HandleRequest(ctx context.Context) {
-	connStr := "postgres://rufusbiggs:Curry123!@localhost/stock_tracker?sslmode=disable"
+	connStr := "postgres://rufusbiggs:Curry123!@database-1.cz6u2ssscpux.eu-north-1.rds.amazonaws.com/stock_tracker?sslmode=disable"
 	db.InitDB(connStr)
 
 	apiKey := "WO363FDOPGSZ33EN"
