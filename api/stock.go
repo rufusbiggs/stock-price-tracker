@@ -40,13 +40,13 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 	var result map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
-		return "", 0, fmt.Errorf("Error unmarshaling response: %v", err)
+		return "", 0, fmt.Errorf("error unmarshaling response: %v", err)
 	}
 
 	// Extract timeseries data
 	timeSeries, ok := result["Time Series (1min)"].(map[string]interface{})
 	if !ok {
-		return "", 0, fmt.Errorf("Failed to parse timeseries data from response")
+		return "", 0, fmt.Errorf("failed to parse timeseries data from response")
 	}
 
 	// Get the latest data
