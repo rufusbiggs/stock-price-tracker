@@ -57,7 +57,6 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 		priceData := data.(map[string]interface{})
 		closePrice := priceData["4. close"].(string)
 
-		// Convert to float
 		latestPrice = parsedPrice(closePrice)
 
 		break // Only need the latest price
