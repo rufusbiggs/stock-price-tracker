@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 	"net/http"
+	"os"
 )
 
 const baseURL = "https://www.alphavantage.co/query"
@@ -14,8 +15,11 @@ const baseURL = "https://www.alphavantage.co/query"
 // Fetches the stock data and returns the parsed closing price and timestamp
 func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string, float64, error) {
 	// Initialize the resty client with the provided http.Client
-	restyClient := resty.New()
-	restyClient.SetTimeout(10 * time.Second) // Set a timeout for the request (if desired)
+	restyClient := resty.New().
+		SetTimeout(10 * time.Second).
+		SetRetryCount(3).
+    	SetRetryWaitTime(2 * time.Second).
+    	SetRetryMaxWaitTime(10 * time.Second)
 
 	// Use the provided client for the request
 	resp, err := restyClient.R().
@@ -28,6 +32,10 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 		Get(baseURL)
 
 	if err != nil {
+		if os.IsTimeout(err) {
+			log.Printf("API request timed out: %v", err)
+			return "", 0, fmt.Errorf("API timeout: %v", err)
+		}
 		return "", 0, fmt.Errorf("error making API request: %v", err)
 	}
 

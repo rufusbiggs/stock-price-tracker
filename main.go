@@ -27,12 +27,14 @@ func HandleRequest(ctx context.Context) {
 
 	apiKey := os.Getenv("API_KEY")
 	symbol := "AAPL" // for testing fetch Apple stock prices
+	log.Println("Hello world")
 
 	// Add timeout for the API request
 	client := &http.Client{
-		Timeout: 5 * time.Second, // Set timeout to 5 seconds
+		Timeout: 15 * time.Second, // Set timeout to 5 seconds
 	}
 
+	log.Println("Making API request...")
 	timestamp, price, err := api.FetchStockPrice(symbol, apiKey, client)
 	if err != nil {
 		log.Fatalf("Error fetching stock data: %v", err)
