@@ -26,7 +26,7 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 		SetQueryParams(map[string]string{
 			"function": "TIME_SERIES_INTRADAY",
 			"symbol":   symbol,
-			"interval": "1min",
+			"interval": "60min",
 			"apikey":   apiKey,
 		}).
 		Get(baseURL)
