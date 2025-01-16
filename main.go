@@ -9,11 +9,12 @@ import (
 	"stock-price-tracker/api"
 	"stock-price-tracker/db"
 	"net/http"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func main() {
 	// Lambda entry point
-	HandleRequest(context.Background())
+	lambda.Start(HandleRequest)
 }
 
 func HandleRequest(ctx context.Context) error {
@@ -27,11 +28,10 @@ func HandleRequest(ctx context.Context) error {
 
 	apiKey := os.Getenv("API_KEY")
 	symbol := "AAPL" // for testing fetch Apple stock prices
-	log.Println("Hello world")
 
 	// Add timeout for the API request
 	client := &http.Client{
-		Timeout: 15 * time.Second, // Set timeout to 5 seconds
+		Timeout: 15 * time.Second, // Set timeout to 15 seconds
 	}
 
 	log.Println("Making API request...")
