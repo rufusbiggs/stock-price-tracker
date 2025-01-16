@@ -52,7 +52,7 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 	}
 
 	// Extract timeseries data
-	timeSeries, ok := result["Time Series (1min)"].(map[string]interface{})
+	timeSeries, ok := result["Time Series (60min)"].(map[string]interface{})
 	if !ok {
 		return "", 0, fmt.Errorf("failed to parse timeseries data from response")
 	}

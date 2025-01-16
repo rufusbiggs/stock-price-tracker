@@ -15,6 +15,7 @@ import (
 func main() {
 	// Lambda entry point
 	lambda.Start(HandleRequest)
+	api.StartServer()
 }
 
 func HandleRequest(ctx context.Context) error {

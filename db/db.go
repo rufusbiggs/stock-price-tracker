@@ -41,3 +41,48 @@ func SaveStockData(symbol string, price float64, timestamp string) error {
 	_, err := DB.Exec(query, symbol, price, timestamp)
 	return err
 }
+
+func GetLatestStockPrice(symbol string) (map[string]interface{}, error) {
+	query := "SELECT price, timestamp FROM stocks WHERE symbol = $1 ORDER BY timestamp DESC LIMIT 1"
+	row := DB.QueryRow(query, symbol)
+
+	var price float64
+	var timestamp string
+	err := row.Scan(&price, &timestamp); 
+	if err != nil {
+		log.Println("Error fetching stock data")
+		return nil, err
+	}
+
+	return map[string]interface{} {
+		"symbol": symbol,
+		"price": price,
+		"timestamp": timestamp,
+	}, nil
+}
+
+func GetHistoricalStockPrices(symbol string) ([]map[string]interface{}, error) {
+	query := "SELECT price, timestamp FROM stocks WHERE symbol = $1 ORDER BY timestamp DESC LIMIT 100"
+	rows, err := DB.Query(query, symbol)
+	if err != nil {
+		log.Println("Error fetching historical stock data")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var history []map[string]interface{}
+	for rows.Next() {
+		var price float64
+		var timestamp string
+		err := rows.Scan(&price, &timestamp)
+		if err != nil {
+			return nil, err
+		}
+		history = append(history, map[string]interface{}{
+			"price": price,
+			"timestamp": timestamp,
+		})
+	}
+	
+	return history, nil
+} 
