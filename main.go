@@ -16,7 +16,7 @@ func main() {
 	HandleRequest(context.Background())
 }
 
-func HandleRequest(ctx context.Context) {
+func HandleRequest(ctx context.Context) error {
 
 	dbUsername := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
@@ -38,7 +38,7 @@ func HandleRequest(ctx context.Context) {
 	timestamp, price, err := api.FetchStockPrice(symbol, apiKey, client)
 	if err != nil {
 		log.Fatalf("Error fetching stock data: %v", err)
-		return
+		return err
 	}
 
 	log.Printf("Fetched stock data: Symbol: %s, Price: %f, Timestamp: %s", symbol, price, timestamp)
@@ -46,8 +46,9 @@ func HandleRequest(ctx context.Context) {
 	err = db.SaveStockData(symbol, price, timestamp)
 	if err != nil {
 		log.Fatalf("Error saving stock data: %v", err)
-		return
+		return err
 	}
 
 	log.Println("Stock Data saved successfully!")
+	return nil
 }
