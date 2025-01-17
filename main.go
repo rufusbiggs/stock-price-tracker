@@ -13,8 +13,18 @@ import (
 )
 
 func main() {
-	// Lambda entry point
-	lambda.Start(HandleRequest)
+	// Check run mode to run locally or on Lambda
+	runMode := os.Getenv("RUN_MODE")
+	if runMode == "local" {
+		log.Printf("Running locally. Starting server...")
+		// Set default values for local testing
+		os.Setenv("_LAMBDA_SERVER_PORT", "8080")
+		os.Setenv("AWS_LAMBDA_RUNTIME_API", "localhost:8081")
+	} else {
+		// Lambda entry point
+		log.Printf("Running in AWS Lambda. Starting Lambda handler...")
+		lambda.Start(HandleRequest)
+	}
 	api.StartServer()
 }
 
