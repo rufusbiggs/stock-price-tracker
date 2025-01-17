@@ -10,6 +10,7 @@ import (
 	"stock-price-tracker/db"
 	"net/http"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -17,6 +18,13 @@ func main() {
 	runMode := os.Getenv("RUN_MODE")
 	if runMode == "local" {
 		log.Printf("Running locally. Starting server...")
+		// Load environment variables for security
+		err := godotenv.Load()
+        if err != nil {
+            log.Fatalf("Error loading .env file: %v", err)
+        }
+        log.Println("Loaded environment variables from .env")
+		initDatabase()
 		// Set default values for local testing
 		os.Setenv("_LAMBDA_SERVER_PORT", "8080")
 		os.Setenv("AWS_LAMBDA_RUNTIME_API", "localhost:8081")
@@ -28,14 +36,16 @@ func main() {
 	api.StartServer()
 }
 
-func HandleRequest(ctx context.Context) error {
-
+func initDatabase() {
 	dbUsername := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s/stocks?sslmode=require", dbUsername, dbPassword, dbHost)
 	db.InitDB(connStr)
+}
+
+func HandleRequest(ctx context.Context) error {
 
 	apiKey := os.Getenv("API_KEY")
 	symbol := "AAPL" // for testing fetch Apple stock prices
