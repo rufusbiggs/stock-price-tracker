@@ -34,3 +34,20 @@ func getHistoricalStockPrices(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, historicalData)
 }
+
+
+// "Meta Data": {
+//         "1. Information": "Intraday (1min) open, high, low, close prices and volume",
+//         "2. Symbol": "AAPL",
+//         "3. Last Refreshed": "2025-01-16 19:59:00",
+//         "4. Interval": "1min",
+//         "5. Output Size": "Compact",
+//         "6. Time Zone": "US/Eastern"
+//     },
+//     "Time Series (1min)": {
+//         "2025-01-16 19:59:00": {
+//             "1. open": "228.4500",
+//             "2. high": "228.4500",
+//             "3. low": "228.3500",
+//             "4. close": "228.3501",
+//             "5. volume": "6247"

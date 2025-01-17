@@ -60,15 +60,29 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 	// Get the latest data
 	var latestTimestamp string
 	var latestPrice float64
-	for timestamp, data := range timeSeries {
-		latestTimestamp = timestamp
-		priceData := data.(map[string]interface{})
-		closePrice := priceData["4. close"].(string)
 
-		latestPrice = parsedPrice(closePrice)
-
-		break // Only need the latest price
+	// iterate through keys to find latest timestamp
+	for timestamp := range timeSeries {
+		if latestTimestamp == "" || timestamp > latestTimestamp {
+			latestTimestamp = timestamp
+		}
 	}
+
+	if latestTimestamp == "" {
+		return "", 0, fmt.Errorf("failed to extract latest timestamp")
+	}
+
+	data, ok := timeSeries[latestTimestamp].(map[string]interface{})
+	if !ok {
+		return "", 0, fmt.Errorf("failed to parse data for latest timestamp")
+	}
+
+	closePriceStr, ok := data["4. close"].(string)
+	if !ok {
+		return "", 0, fmt.Errorf("failed to parse close price data for latest timestamp")
+	}
+
+	latestPrice = parsedPrice(closePriceStr)
 
 	return latestTimestamp, latestPrice, nil
 }
