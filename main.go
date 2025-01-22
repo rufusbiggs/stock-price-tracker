@@ -30,6 +30,7 @@ func main() {
 		os.Setenv("AWS_LAMBDA_RUNTIME_API", "localhost:8081")
 	} else {
 		// Lambda entry point
+		initDatabase()
 		log.Printf("Running in AWS Lambda. Starting Lambda handler...")
 		lambda.Start(HandleRequest)
 	}

@@ -10,6 +10,20 @@ import (
 	"os"
 )
 
+// Define the stock data and response struct
+type StockData struct {
+    Open   string `json:"1. open"`
+    High   string `json:"2. high"`
+    Low    string `json:"3. low"`
+    Close  string `json:"4. close"`
+    Volume string `json:"5. volume"`
+}
+
+type APIResponse struct {
+    MetaData    map[string]string         `json:"Meta Data"`
+    TimeSeries  map[string]StockData      `json:"Time Series (60min)"`
+}
+
 type TimestampValue struct {
 	Timestamp string
 	Price float64
@@ -50,17 +64,14 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 		return "", 0, nil, fmt.Errorf("API error: %s", resp.Status())
 	}
 
-	var result map[string]interface{}
+	var result APIResponse
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
 		return "", 0, nil, fmt.Errorf("error unmarshaling response: %v", err)
 	}
 
 	// Extract timeseries data
-	timeSeries, ok := result["Time Series (60min)"].(map[string]map[string]string)
-	if !ok {
-		return "", 0, nil, fmt.Errorf("failed to parse timeseries data from response")
-	}
+	timeSeries := result.TimeSeries
 
 	// Get the latest data
 	var latestTimestamp string
@@ -83,11 +94,7 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 
 	for timestamp, data := range timeSeries {
 		if timestamp[:10] == latestDayStr {
-			closePriceStr, ok := data["4. close"]
-			if !ok {
-				fmt.Printf("failed to parse close price data")
-				continue
-			}
+			closePriceStr := data.Close
 			price := parsedPrice(closePriceStr)
 			daysPrices = append(daysPrices, TimestampValue{
 				Timestamp: timestamp,
