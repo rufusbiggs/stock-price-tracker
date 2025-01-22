@@ -10,10 +10,15 @@ import (
 	"os"
 )
 
+type TimestampValue struct {
+	Timestamp string
+	Price float64
+}
+
 const baseURL = "https://www.alphavantage.co/query"
 
 // Fetches the stock data and returns the parsed closing price and timestamp
-func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string, float64, error) {
+func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string, float64, []TimestampValue, error) {
 	// Initialize the resty client with the provided http.Client
 	restyClient := resty.New().
 		SetTimeout(10 * time.Second).
@@ -34,27 +39,27 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 	if err != nil {
 		if os.IsTimeout(err) {
 			log.Printf("API request timed out: %v", err)
-			return "", 0, fmt.Errorf("API timeout: %v", err)
+			return "", 0, nil, fmt.Errorf("API timeout: %v", err)
 		}
-		return "", 0, fmt.Errorf("error making API request: %v", err)
+		return "", 0, nil, fmt.Errorf("error making API request: %v", err)
 	}
 
 	if resp.IsError() {
 		// Log the error response for debugging purposes
 		log.Printf("API Request failed with status: %s and response: %s", resp.Status(), resp.String())
-		return "", 0, fmt.Errorf("API error: %s", resp.Status())
+		return "", 0, nil, fmt.Errorf("API error: %s", resp.Status())
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
-		return "", 0, fmt.Errorf("error unmarshaling response: %v", err)
+		return "", 0, nil, fmt.Errorf("error unmarshaling response: %v", err)
 	}
 
 	// Extract timeseries data
-	timeSeries, ok := result["Time Series (60min)"].(map[string]interface{})
+	timeSeries, ok := result["Time Series (60min)"].(map[string]map[string]string)
 	if !ok {
-		return "", 0, fmt.Errorf("failed to parse timeseries data from response")
+		return "", 0, nil, fmt.Errorf("failed to parse timeseries data from response")
 	}
 
 	// Get the latest data
@@ -69,22 +74,31 @@ func FetchStockPrice(symbol string, apiKey string, client *http.Client) (string,
 	}
 
 	if latestTimestamp == "" {
-		return "", 0, fmt.Errorf("failed to extract latest timestamp")
+		return "", 0, nil, fmt.Errorf("failed to extract latest timestamp")
 	}
 
-	data, ok := timeSeries[latestTimestamp].(map[string]interface{})
-	if !ok {
-		return "", 0, fmt.Errorf("failed to parse data for latest timestamp")
+	// got the latest date, now going to filter only datapoints on this day
+	var daysPrices []TimestampValue
+	latestDayStr := latestTimestamp[:10]
+
+	for timestamp, data := range timeSeries {
+		if timestamp[:10] == latestDayStr {
+			closePriceStr, ok := data["4. close"]
+			if !ok {
+				fmt.Printf("failed to parse close price data")
+				continue
+			}
+			price := parsedPrice(closePriceStr)
+			daysPrices = append(daysPrices, TimestampValue{
+				Timestamp: timestamp,
+				Price:     price,
+			})
+		}
 	}
 
-	closePriceStr, ok := data["4. close"].(string)
-	if !ok {
-		return "", 0, fmt.Errorf("failed to parse close price data for latest timestamp")
-	}
+	latestPrice = daysPrices[0].Price
 
-	latestPrice = parsedPrice(closePriceStr)
-
-	return latestTimestamp, latestPrice, nil
+	return latestTimestamp, latestPrice, daysPrices, nil
 }
 
 // Helper function to parse the price string into a float

@@ -56,18 +56,23 @@ func HandleRequest(ctx context.Context) error {
 	}
 
 	log.Println("Making API request...")
-	timestamp, price, err := api.FetchStockPrice(symbol, apiKey, client)
+	timestamp, price, daysPrices, err := api.FetchStockPrice(symbol, apiKey, client)
 	if err != nil {
 		log.Fatalf("Error fetching stock data: %v", err)
 		return err
 	}
 
-	log.Printf("Fetched stock data: Symbol: %s, Price: %f, Timestamp: %s", symbol, price, timestamp)
+	log.Printf("Latest stock data: Symbol: %s, Price: %f, Timestamp: %s", symbol, price, timestamp)
 
-	err = db.SaveStockData(symbol, price, timestamp)
-	if err != nil {
-		log.Fatalf("Error saving stock data: %v", err)
-		return err
+	for _, data := range daysPrices {
+		daysPrice := data.Price
+		daysTimestamp := data.Timestamp
+
+		err = db.SaveStockData(symbol, daysPrice, daysTimestamp)
+		if err != nil {
+			log.Fatalf("Error saving stock data: %v", err)
+			return err
+		}
 	}
 
 	log.Println("Stock Data saved successfully!")
